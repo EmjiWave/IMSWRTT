@@ -2,119 +2,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Keyboard Typing</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 30px;
-  }
-  input, button {
-    padding: 8px;
-    margin: 5px;
-    font-size: 16px;
-  }
-  #wordList {
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    min-height: 40px;
-  }
-  .correct { color: green; font-weight: bold; }
-  .incorrect { color: red; font-weight: bold; }
-</style>
+  <meta charset="UTF-8">
+  <title>Typing Challenge</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      margin: 40px;
+      color: #333;
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    input[type="text"], button {
+      padding: 10px 14px;
+      margin: 6px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:hover {
+      border-color: #3498db;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+
+    #wordList {
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 6px;
+      min-height: 40px;
+    }
+
+    .word-badge {
+      display: inline-block;
+      background: #ecf0f1;
+      padding: 6px 10px;
+      margin: 4px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+
+    .incorrect {
+      color: red;
+      font-weight: bold;
+    }
+
+    #typingSection {
+      display: none;
+      animation: fadeIn 0.6s ease-in-out forwards;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #shownWord {
+      font-size: 24px;
+      color: #34495e;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Word Input Form with Debounce & Throttle Check</h2>
+  <h2>🎯 Typing Challenge with Debounce & Throttle</h2>
 
+  <input type="text" id="wordInput" placeholder="Enter a word" title="Type a word and click Add">
+  <button id="addWord" title="Add word to the list">Add Word</button>
 
-<input type="text" id="wordInput" placeholder="Enter a word">
-<button id="addWord">Add Word</button>
+  <div id="wordList">No words added yet.</div>
 
-<div id="wordList">No words added yet.</div>
+  <button id="startBtn" disabled title="Start typing challenge">Start</button>
 
+  <div id="typingSection">
+    <p>Type the shown word:</p>
+    <h3 id="shownWord"></h3>
+    <input type="text" id="typeInput" placeholder="Type here" title="Type the word shown above">
+    <div id="result"></div>
+  </div>
 
-<button id="startBtn" disabled>Start</button>
-
-
-<div id="typingSection" style="display:none;">
-  <p>Type the shown word:</p>
-  <h3 id="shownWord"></h3>
-  <input type="text" id="typeInput" placeholder="Type here">
-  <div id="result"></div>
-</div>
-
-<script>
-function debounce(func, delay) {
-  let timeout;
-  return function(...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), delay);
-  };
-}
-
-function throttle(func, limit) {
-  let lastCall = 0;
-  return function(...args) {
-    const now = Date.now();
-    if (now - lastCall >= limit) {
-      lastCall = now;
-      func.apply(this, args);
+  <script>
+    function debounce(func, delay) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
     }
-  };
-}
 
+    function throttle(func, limit) {
+      let lastCall = 0;
+      return function (...args) {
+        const now = Date.now();
+        if (now - lastCall >= limit) {
+          lastCall = now;
+          func.apply(this, args);
+        }
+      };
+    }
 
-let words = [];
-let currentWord = "";
+    let words = [];
+    let currentWord = "";
 
+    const wordInput = document.getElementById("wordInput");
+    const wordListDiv = document.getElementById("wordList");
+    const startBtn = document.getElementById("startBtn");
+    const typingSection = document.getElementById("typingSection");
+    const shownWord = document.getElementById("shownWord");
+    const typeInput = document.getElementById("typeInput");
+    const resultDiv = document.getElementById("result");
 
-document.getElementById("addWord").addEventListener("click", () => {
-  const input = document.getElementById("wordInput");
-  const word = input.value.trim();
-  if (word) {
-    words.push(word);
-    document.getElementById("wordList").textContent = words.join(", ");
-    document.getElementById("startBtn").disabled = false;
-    input.value = "";
-  }
-});
+    document.getElementById("addWord").addEventListener("click", () => {
+      const word = wordInput.value.trim();
+      if (word) {
+        words.push(word);
+        updateWordList();
+        startBtn.disabled = false;
+        wordInput.value = "";
+      }
+    });
 
+    function updateWordList() {
+      wordListDiv.innerHTML = words.map(w => `<span class="word-badge">${w}</span>`).join(" ");
+    }
 
-document.getElementById("startBtn").addEventListener("click", () => {
-  document.getElementById("typingSection").style.display = "block";
-  showRandomWord();
-});
+    startBtn.addEventListener("click", () => {
+      typingSection.style.display = "block";
+      showRandomWord();
+    });
 
-function showRandomWord() {
-  currentWord = words[Math.floor(Math.random() * words.length)];
-  document.getElementById("shownWord").textContent = currentWord;
-  document.getElementById("typeInput").value = "";
-  document.getElementById("result").textContent = "";
-}
+    function showRandomWord() {
+      currentWord = words[Math.floor(Math.random() * words.length)];
+      shownWord.textContent = currentWord;
+      typeInput.value = "";
+      resultDiv.textContent = "";
+    }
 
+    typeInput.addEventListener("input", debounce(checkWord, 500));
+    typeInput.addEventListener("input", throttle(checkWord, 1000));
 
-document.getElementById("typeInput").addEventListener("input", debounce(checkWord, 500));
+    function checkWord() {
+      const typed = typeInput.value.trim();
+      if (!typed) {
+        resultDiv.textContent = "";
+        return;
+      }
 
-document.getElementById("typeInput").addEventListener("input", throttle(checkWord, 1000));
-
-function checkWord() {
-  const typed = document.getElementById("typeInput").value.trim();
-  const resultDiv = document.getElementById("result");
-
-  if (!typed) {
-    resultDiv.textContent = "";
-    return;
-  }
-
-  if (typed.toLowerCase() === currentWord.toLowerCase()) {
-    resultDiv.innerHTML = `<span class="correct">✅ Correct!</span>`;
-  } else {
-    resultDiv.innerHTML = `<span class="incorrect">❌ Incorrect</span>`;
-  }
-}
-</script>
+      if (typed.toLowerCase() === currentWord.toLowerCase()) {
+        resultDiv.innerHTML = `<span class="correct">✅ Correct. Very Good ka sa'kin!</span>`;
+      } else {
+        resultDiv.innerHTML = `<span class="incorrect">❌ Incorrect. K lang 'yan, just try again. </span>`;
+      }
+    }
+  </script>
 
 </body>
 </html>
