@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Keyboard Typing</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 30px;
+  }
+  input, button {
+    padding: 8px;
+    margin: 5px;
+    font-size: 16px;
+  }
+  #wordList {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    min-height: 40px;
+  }
+  .correct { color: green; font-weight: bold; }
+  .incorrect { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h2>Word Input Form with Debounce & Throttle Check</h2>
+
+
+<input type="text" id="wordInput" placeholder="Enter a word">
+<button id="addWord">Add Word</button>
+
+<div id="wordList">No words added yet.</div>
+
+
+<button id="startBtn" disabled>Start</button>
+
+
+<div id="typingSection" style="display:none;">
+  <p>Type the shown word:</p>
+  <h3 id="shownWord"></h3>
+  <input type="text" id="typeInput" placeholder="Type here">
+  <div id="result"></div>
+</div>
+
+<script>
+function debounce(func, delay) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
+function throttle(func, limit) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= limit) {
+      lastCall = now;
+      func.apply(this, args);
+    }
+  };
+}
+
+
+let words = [];
+let currentWord = "";
+
+
+document.getElementById("addWord").addEventListener("click", () => {
+  const input = document.getElementById("wordInput");
+  const word = input.value.trim();
+  if (word) {
+    words.push(word);
+    document.getElementById("wordList").textContent = words.join(", ");
+    document.getElementById("startBtn").disabled = false;
+    input.value = "";
+  }
+});
+
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  document.getElementById("typingSection").style.display = "block";
+  showRandomWord();
+});
+
+function showRandomWord() {
+  currentWord = words[Math.floor(Math.random() * words.length)];
+  document.getElementById("shownWord").textContent = currentWord;
+  document.getElementById("typeInput").value = "";
+  document.getElementById("result").textContent = "";
+}
+
+
+document.getElementById("typeInput").addEventListener("input", debounce(checkWord, 500));
+
+document.getElementById("typeInput").addEventListener("input", throttle(checkWord, 1000));
+
+function checkWord() {
+  const typed = document.getElementById("typeInput").value.trim();
+  const resultDiv = document.getElementById("result");
+
+  if (!typed) {
+    resultDiv.textContent = "";
+    return;
+  }
+
+  if (typed.toLowerCase() === currentWord.toLowerCase()) {
+    resultDiv.innerHTML = `<span class="correct">✅ Correct!</span>`;
+  } else {
+    resultDiv.innerHTML = `<span class="incorrect">❌ Incorrect</span>`;
+  }
+}
+</script>
+
+</body>
+</html>
